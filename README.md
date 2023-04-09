@@ -10,7 +10,7 @@ Before running the project, make sure you have MongoDB installed and running on 
 2. Create a new database by running `use <database_name>` in the shell.
 3. Create a new user with authentication privileges by running the following command:
 
-   ```rust
+   ```python
    db.createUser({
       user: "<username>",
       pwd: "<password>",
@@ -20,7 +20,8 @@ Before running the project, make sure you have MongoDB installed and running on 
 
 Make sure to replace `<username>`, `<password>`, and `<database_name>` with your desired values.
 
-After that, you need to change all strings like `env::var("NAME")` with field with your data.
+### Setting up `env.var("<name>")`
+After setting up your MongoDB server, you need to change all strings like `env::var("NAME")` with a field with your data.
 
 If you doing all correctly, your code will work.
 
@@ -30,7 +31,6 @@ If you doing all correctly, your code will work.
     thread_rng().fill_bytes(&mut gen_aes_key);
     let aes_key_str = hex::encode(gen_aes_key);
     env::set_var("AES_KEY", &aes_key_str);
-
 ```
 ### Running the Project
 
