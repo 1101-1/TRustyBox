@@ -4,4 +4,3 @@
 /files_to_send
 /files
 Cargo.lock
-src/encryption.rs

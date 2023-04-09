@@ -1,8 +1,6 @@
 use async_recursion::async_recursion;
 use rand::Rng;
 
-// use crate::connection_to_db::check_short_url_mongodb;
-
 pub async fn generate_uuid_v4() -> String {
     uuid::Uuid::new_v4().to_string()
 }
