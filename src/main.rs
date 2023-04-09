@@ -8,7 +8,7 @@ use axum::{
     Extension, Json,
 };
 
-use encryption::{decrypt_chunk, encrypt_chunk, set_aes_key};
+use encryption::{set_aes_key, decrypt_chunk, encrypt_data};
 
 use futures::TryStreamExt;
 use serde::Serialize;
@@ -24,10 +24,7 @@ mod tools;
 
 const MAX_FILE_SIZE: usize = 15 * 1024 * 1024;
 
-async fn download_file(
-    Extension(aes_key): Extension<[u8; 32]>,
-    Path(short_url): Path<String>,
-) -> Result<impl IntoResponse, Infallible> {
+async fn download_file(Extension(aes_key): Extension<[u8; 32]>, Path(short_url): Path<String>) -> Result<impl IntoResponse, Infallible> {
     let (file_path_to_file, file_name, changed_name) =
         match connection_to_db::get_name_and_path_of_file(short_url).await {
             Ok((file_path, file_name, uuid_name)) => (file_path, file_name, uuid_name),
@@ -41,18 +38,18 @@ async fn download_file(
         };
 
     let _ = &file_path_to_file.replace(&changed_name, &file_name);
-
+    
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
-            let mut buf = Vec::new();
 
+            let mut buf = Vec::new();
             file.read_to_end(&mut buf).await.unwrap();
 
-            let decrypted_data = decrypt_chunk(&buf, aes_key).await.unwrap();
+            let data = decrypt_chunk(&buf, aes_key).await.unwrap();
 
-            let len = decrypted_data.len();
-
-            let body = axum::body::Body::from(decrypted_data);
+            let len = data.len();
+            
+            let body = axum::body::Body::from(data);
             let mut response = Response::new(body);
 
             let content_type = tools::check_content_type(&file_name).await;
@@ -82,40 +79,42 @@ async fn download_file(
     }
 }
 
-async fn upload_file(
-    Extension(aes_key): Extension<[u8; 32]>,
-    mut multipart: Multipart,
-) -> Result<impl IntoResponse, Infallible> {
+
+async fn upload_file(Extension(aes_key): Extension<[u8; 32]>,mut multipart: Multipart) -> Result<impl IntoResponse, Infallible> {
     if let Some(mut field) = multipart.next_field().await.unwrap() {
-        let file_name = field.file_name().unwrap().to_owned();
-        let new_filename = match file_name.split('.').last() {
-            Some(extension) => format!("{}.{}", tools::generate_uuid_v4().await, extension),
-            None => tools::generate_uuid_v4().await,
-        };
+            let file_name = field.file_name().unwrap().to_owned();
+            let new_filename = match file_name.split('.').last() {
+                Some(extension) => format!("{}.{}", tools::generate_uuid_v4().await, extension),
+                None => tools::generate_uuid_v4().await,
+            };
 
-        let generated_short_path = tools::generate_short_path_url().await;
+            let generated_short_path = tools::generate_short_path_url().await;
 
-        let file_path = format!(
-            "{}{}",
-            env::var("PATH_TO_FILES").expect("Unexpected error"),
-            new_filename
-        );
+            let file_path = format!(
+                "{}{}",
+                env::var("PATH_TO_FILES").expect("Unexpected error"),
+                new_filename
+            );
 
-        let mut file = match File::create(&file_path).await {
-            Ok(file) => file,
-            Err(_err) => {
-                let response = UploadResponse {
-                    short_path: None,
-                    url: None,
-                    error: Some("Can't to upload file. Try again".to_string()),
-                };
-                return Ok((StatusCode::BAD_REQUEST, Json(response)));
+            let mut file = match File::create(&file_path).await {
+                Ok(file) => file,
+                Err(_err) => {
+                    let response = UploadResponse {
+                        short_path: None,
+                        url: None,
+                        error: Some("Can't to upload file. Try again".to_string()),
+                    };
+                    return Ok((StatusCode::BAD_REQUEST, Json(response)));
+                }
+            };
+            
+            let mut data = Vec::new();
+
+            while let Some(chunk) = field.try_next().await.unwrap() {
+                data.extend_from_slice(&chunk);
             }
-        };
-
-        while let Some(chunk) = field.try_next().await.unwrap() {
-            let encrypted_chunk = match encrypt_chunk(&chunk, aes_key).await {
-                Ok(encrypted_chunk) => encrypted_chunk,
+            let encrypted_data = match encrypt_data(&data, aes_key).await {
+                Ok(encrypted_data) => encrypted_data,
                 Err(_err) => {
                     let response = UploadResponse {
                         short_path: None,
@@ -125,38 +124,33 @@ async fn upload_file(
                     return Ok((StatusCode::BAD_REQUEST, Json(response)));
                 }
             };
-            file.write_all(&encrypted_chunk).await.unwrap();
+            file.write_all(&encrypted_data).await.unwrap();
             file.flush().await.unwrap();
-        }
-        match connection_to_db::insert_to_mongodb(
-            &file_path,
-            &new_filename,
-            &file_name,
-            generated_short_path.clone(),
-        )
-        .await
-        {
-            Ok(()) => (),
-            Err(_err) => {
-                let response = UploadResponse {
-                    short_path: None,
-                    url: None,
-                    error: Some("Could not insert information to database. Try again".to_string()),
-                };
-                return Ok((StatusCode::BAD_REQUEST, Json(response)));
-            }
-        };
+            drop(file);
+            match connection_to_db::insert_to_mongodb(
+                        &file_path,
+                        &new_filename,
+                        &file_name,
+                        generated_short_path.clone()
+                    ).await
+                    {
+                        Ok(()) => (),
+                        Err(_err) => {
+                            let response = UploadResponse {
+                                short_path: None,
+                                url: None,
+                                error: Some("Could not insert information to database. Try again".to_string()),
+                            };
+                            return Ok((StatusCode::BAD_REQUEST, Json(response)));
+                        }
+                    };
 
-        let response = UploadResponse {
-            short_path: Some(generated_short_path.clone()),
-            url: Some(format!(
-                "http://{}/{}",
-                env::var("SERVER_ADDR").expect("ADDR NOT FOUND"),
-                &generated_short_path
-            )),
-            error: None,
-        };
-        return Ok((StatusCode::BAD_REQUEST, Json(response)));
+            let response = UploadResponse {
+                short_path: Some(generated_short_path.clone()),
+                url: Some(format!("http://{}/{}", env::var("SERVER_ADDR").expect("ADDR NOT FOUND"), &generated_short_path)),
+                error: None,
+            };
+            return Ok((StatusCode::BAD_REQUEST, Json(response)));
     } else {
         let response = UploadResponse {
             short_path: None,
