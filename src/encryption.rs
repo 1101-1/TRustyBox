@@ -13,20 +13,20 @@ pub async fn set_aes_key() -> [u8; 32] {
     aes_key
 }
 
-pub async fn encrypt_chunk(chunk: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tokio::io::Error> {
+pub async fn encrypt_data(data: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tokio::io::Error> {
     let cipher = Aes256::new(&GenericArray::from_slice(&aes_key));
-    let mut padded_chunk = chunk.to_vec();
-    let pad_len = 16 - (chunk.len() % 16);
+    let mut padded_data = data.to_vec();
+    let pad_len = 16 - (data.len() % 16);
     let pad_byte = pad_len as u8;
 
-    padded_chunk.resize(chunk.len() + pad_len, pad_byte);
+    padded_data.resize(data.len() + pad_len, pad_byte);
 
-    for block in padded_chunk.chunks_exact_mut(16) {
+    for block in padded_data.chunks_exact_mut(16) {
         let block = GenericArray::from_mut_slice(block);
         cipher.encrypt_block(block);
     }
 
-    Ok(padded_chunk)
+    Ok(padded_data)
 }
 
 pub async fn decrypt_chunk(buf: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tokio::io::Error> {
