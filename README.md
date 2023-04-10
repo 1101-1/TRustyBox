@@ -34,12 +34,11 @@ If you doing all correctly, your code will work.
 ```
 ### Running the Project
 
-To run the project, first clone the repository and navigate to the project directory. Then, run the following command to start the server:
+To run the project, first clone the repository and navigate to the project directory. Then, run the following command in `cmd` to start the server:
 
 `cargo run`
 
-
-This will start the server on `http://127.0.0.1:8080/`.
+This will start the server on `http://127.0.0.1:8080/` or by DATA in `env::var("SERVER_ADDR")`.
 
 ### Uploading Files
 
@@ -49,8 +48,10 @@ To upload a file to the server, you can use `curl` in your terminal. For example
 
 This will upload the file to the server and return a `URL` and other `DATA` in `JSON` format that you can use to GET the file by following the link:
 
-`http://127.0.0.1:8080/<short_path>`
+In our case we need `<short_path>` and `<aes_key>`. We need to insert this data like:
+
+`http://127.0.0.1:8080/<short_path>/<aes_key>/` where `<short_path>` is unique generated_path inseted in MongoDB and `<aes_key>` is generated aes_key, which sent to the user in `JSON` format
 
 ### Conclusion
 
-With this project, you can easily create a secure file hosting service with `MongoDB` authentication. By following the steps outlined above, you can set up `MongoDB`, run the project, and start uploading files to your own file hosting service.
+With this project, you can easily create a secure file hosting service with `MongoDB` authentication and encrypted files. By following the steps outlined above, you can set up `MongoDB`, run the project, and start uploading files to your own secure file hosting service written on Axum.

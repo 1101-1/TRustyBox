@@ -84,7 +84,7 @@ async fn find_dublicate(short_url: String) -> String {
 }
 
 pub async fn get_name_and_path_of_file(
-    bd_short_url: String,
+    db_short_url: String,
 ) -> mongodb::error::Result<(String, String)> {
     let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error")).await?;
 
@@ -102,7 +102,7 @@ pub async fn get_name_and_path_of_file(
     );
 
     if let Some(doc) = collection
-        .find_one(doc! {"short_url": bd_short_url}, None)
+        .find_one(doc! {"short_url": db_short_url}, None)
         .await?
     {
         let path = doc.get_str("path").unwrap().to_string();

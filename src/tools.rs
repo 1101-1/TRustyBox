@@ -1,4 +1,3 @@
-use async_recursion::async_recursion;
 use rand::Rng;
 
 pub async fn generate_uuid_v4() -> String {
@@ -71,7 +70,6 @@ pub async fn check_content_type(filename: &String) -> &'static str {
     }
 }
 
-#[async_recursion]
 pub async fn generate_short_path_url() -> String {
     let mut short_url: Vec<char> = Vec::with_capacity(8);
     let chars: [char; 52] = [
