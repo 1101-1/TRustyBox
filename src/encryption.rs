@@ -3,14 +3,13 @@ use aes::{
     Aes256,
 };
 use aes_gcm::KeyInit;
-use std::env;
+use rand::thread_rng;
+use rand_core::RngCore;
 
 pub async fn set_aes_key() -> [u8; 32] {
-    let aes_key_from_str = env::var("AES_KEY").expect("AES_KEY not set");
-    let mut aes_key = [0; 32];
-    let aes_key_bytes = hex::decode(&aes_key_from_str).expect("Failed to parse AES key");
-    aes_key.copy_from_slice(&aes_key_bytes);
-    aes_key
+    let mut gen_aes_key = [0u8; 32];
+    thread_rng().fill_bytes(&mut gen_aes_key);
+    gen_aes_key
 }
 
 pub async fn encrypt_data(data: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tokio::io::Error> {
@@ -29,7 +28,7 @@ pub async fn encrypt_data(data: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tok
     Ok(padded_data)
 }
 
-pub async fn decrypt_chunk(buf: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tokio::io::Error> {
+pub async fn decrypt_data(buf: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, tokio::io::Error> {
     let cipher = Aes256::new(&GenericArray::from_slice(&aes_key));
     let mut decrypted_data = buf.to_vec();
 

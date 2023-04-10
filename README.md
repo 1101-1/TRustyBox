@@ -1,4 +1,4 @@
-## File Hosting with MongoDB Authentication
+## File Hosting with MongoDB Authentication, Axum and AES-256 encryption
 
 This project is a simple file hosting service with encrypt files and built with Rust and MongoDB. It allows users to securely store and retrieve files using a RESTful API. The service authenticates users against a MongoDB database, ensuring that users can access their files.
 

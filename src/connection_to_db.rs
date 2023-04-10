@@ -15,9 +15,11 @@ pub async fn insert_to_mongodb(
     first_name: &str,
     mut short_path_url: String,
 ) -> mongodb::error::Result<()> {
-    let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error")).await?;
+    let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error"))
+        .await
+        .unwrap();
 
-    let client = Client::with_options(client_options)?;
+    let client = Client::with_options(client_options).unwrap();
 
     let db = client.database(
         env::var("DATABASE_NAME")
@@ -45,7 +47,7 @@ pub async fn insert_to_mongodb(
         "new_filename": new_filename,
         "short_url": short_path_url,
     };
-    collection.insert_one(document, None).await?;
+    collection.insert_one(document, None).await.unwrap();
 
     Ok(())
 }
@@ -83,7 +85,7 @@ async fn find_dublicate(short_url: String) -> String {
 
 pub async fn get_name_and_path_of_file(
     bd_short_url: String,
-) -> mongodb::error::Result<(String, String, String)> {
+) -> mongodb::error::Result<(String, String)> {
     let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error")).await?;
 
     let client = Client::with_options(client_options)?;
@@ -105,8 +107,7 @@ pub async fn get_name_and_path_of_file(
     {
         let path = doc.get_str("path").unwrap().to_string();
         let first_name = doc.get_str("first_name").unwrap().to_string();
-        let changed_name = doc.get_str("new_filename").unwrap().to_string();
-        return Ok((path, first_name, changed_name));
+        return Ok((path, first_name));
     } else {
         return Err(mongodb::error::Error::from(tokio::io::Error::new(
             tokio::io::ErrorKind::Other,
