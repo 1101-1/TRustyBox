@@ -2,8 +2,8 @@ use base64::{engine::general_purpose, Engine};
 use dotenv::dotenv;
 
 use axum::{
-    extract::{DefaultBodyLimit, Multipart, Path},
-    http::{header::CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, Response, StatusCode},
+    extract::{DefaultBodyLimit, Multipart, Path, Query},
+    http::{header::CONTENT_TYPE, HeaderName, HeaderValue, Response, StatusCode},
     response::IntoResponse,
     routing::{get, post, Router},
     Json,
@@ -12,7 +12,7 @@ use axum::{
 use encryption::{decrypt_data, encrypt_data, set_aes_key};
 
 use futures::TryStreamExt;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{convert::Infallible, env};
 use tokio::{
     fs::File,
@@ -129,7 +129,7 @@ async fn download_file(
 }
 
 async fn upload_file(
-    header: HeaderMap,
+    Query(payload): Query<UploadPayload>,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, Infallible> {
     if let Some(mut field) = multipart.next_field().await.unwrap() {
@@ -138,7 +138,6 @@ async fn upload_file(
             Some(extension) => format!("{}.{}", tools::generate_uuid_v4().await, extension),
             None => tools::generate_uuid_v4().await,
         };
-        // let content_disposition = field.headers().get("content-disposition");
 
         let generated_short_path = tools::generate_short_path_url().await;
 
@@ -160,9 +159,8 @@ async fn upload_file(
                 return Ok((StatusCode::BAD_REQUEST, Json(response)));
             }
         };
-
-        if let Some(header) = header.get("encryption") {
-            if header.to_str().unwrap() == "aes" {
+        if let Some(header) = payload.encryption {
+            if header == "aes".to_string() || header == "aes/".to_string() {
                 let mut data = Vec::new();
                 while let Some(chunk) = field.try_next().await.unwrap() {
                     data.extend_from_slice(&chunk);
@@ -269,6 +267,11 @@ async fn upload_file(
         };
         return Ok((StatusCode::BAD_REQUEST, Json(response)));
     }
+}
+
+#[derive(Deserialize)]
+struct UploadPayload {
+    encryption: Option<String>,
 }
 
 #[derive(Serialize)]
