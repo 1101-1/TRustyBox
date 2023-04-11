@@ -42,16 +42,23 @@ This will start the server on `http://127.0.0.1:8080/` or by DATA in `env::var("
 
 ### Uploading Files
 
-To upload a file to the server, you can use `curl` in your terminal. For example, to upload a file called `example.txt`, run the following command:
+To upload a file to the server, you can use `curl` in your terminal. For example, to upload a file called `example.txt` without encryption by default, you can run the following command:
+
 `curl -X POST -F "file=@example.txt" http://127.0.0.1:8080/`
 
 
-This will upload the file to the server and return a `URL` and other `DATA` in `JSON` format that you can use to GET the file by following the link:
+Otherwise, if we need to upload encrypted file on server, we can use query. Here an instance:
 
-In our case we need `<short_path>` and `<aes_key>`. We need to insert this data like:
+`curl -X POST -F "file=@example.txt" http://127.0.0.1:8080/?encryption=aes/`
 
-`http://127.0.0.1:8080/<short_path>/<aes_key>/` where `<short_path>` is unique generated_path inseted in MongoDB and `<aes_key>` is generated aes_key, which sent to the user in `JSON` format
+### Download Files
+To get file from server, we need to go on the following link:
+
+`http://127.0.0.1:8080/<short_path>/`
+
+If file was encrypted, instead need to use `http://127.0.0.1:8080/<short_path>/<aes_key>`.
+
+In our case  `<short_path>` is unique generated_path inserted in MongoDB and `<aes_key>` is generated <aes_key> by server, which is not stored it.
 
 ### Conclusion
-
 With this project, you can easily create a secure file hosting service with `MongoDB` authentication and encrypted files. By following the steps outlined above, you can set up `MongoDB`, run the project, and start uploading files to your own secure file hosting service written on Axum.
