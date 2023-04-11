@@ -29,7 +29,7 @@ If you doing all correctly, your code will work.
 ```rust
     let mut gen_aes_key = [0u8; 32];
     thread_rng().fill_bytes(&mut gen_aes_key);
-    let aes_key_str = hex::encode(gen_aes_key);
+    let aes_key_str = general_purpose::STANDARD_NO_PAD.encode(gen_aes_key);
     env::set_var("AES_KEY", &aes_key_str);
 ```
 ### Running the Project
