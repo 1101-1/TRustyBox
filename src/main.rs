@@ -1,3 +1,4 @@
+use axum_extra::routing::RouterExt;
 use base64::{engine::general_purpose, Engine};
 use dotenv::dotenv;
 
@@ -323,8 +324,8 @@ async fn main() {
     let app = Router::new()
         .route("/", post(upload_file))
         .layer(DefaultBodyLimit::max(MAX_FILE_SIZE))
-        .route("/:path", get(download_file))
-        .route("/:path/:aes_key", get(download_file_with_aes));
+        .route_with_tsr("/:path", get(download_file))
+        .route_with_tsr("/:path/:aes_key", get(download_file_with_aes));
 
     let addr = env::var("SERVER_ADDR")
         .expect("ADDR NOT FOUND")
