@@ -14,6 +14,7 @@ pub async fn insert_to_mongodb(
     new_filename: &String,
     first_name: &str,
     mut short_path_url: String,
+    is_aes: bool,
 ) -> mongodb::error::Result<()> {
     let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error"))
         .await
@@ -46,6 +47,7 @@ pub async fn insert_to_mongodb(
         "first_name": first_name,
         "new_filename": new_filename,
         "short_url": short_path_url,
+        "is_aes": is_aes
     };
     collection.insert_one(document, None).await.unwrap();
 
@@ -85,7 +87,7 @@ async fn find_dublicate(short_url: String) -> String {
 
 pub async fn get_name_and_path_of_file(
     db_short_url: String,
-) -> mongodb::error::Result<(String, String)> {
+) -> mongodb::error::Result<(String, String, bool)> {
     let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error")).await?;
 
     let client = Client::with_options(client_options)?;
@@ -107,7 +109,8 @@ pub async fn get_name_and_path_of_file(
     {
         let path = doc.get_str("path").unwrap().to_string();
         let first_name = doc.get_str("first_name").unwrap().to_string();
-        return Ok((path, first_name));
+        let is_aes = doc.get_bool("is_aes").unwrap();
+        return Ok((path, first_name, is_aes));
     } else {
         return Err(mongodb::error::Error::from(tokio::io::Error::new(
             tokio::io::ErrorKind::Other,

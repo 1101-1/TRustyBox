@@ -28,7 +28,16 @@ const MAX_FILE_SIZE: usize = 15 * 1024 * 1024;
 async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoResponse, Infallible> {
     let (file_path_to_file, file_name) =
         match connection_to_db::get_name_and_path_of_file(short_url).await {
-            Ok((file_path, file_name)) => (file_path, file_name),
+            Ok((file_path, file_name, is_encrypted)) => {
+                if is_encrypted == true {
+                    let response = Response::builder()
+                        .status(StatusCode::BAD_REQUEST)
+                        .body("Insert the AES key into URL".into())
+                        .unwrap();
+                    return Ok(response)
+                }
+                (file_path, file_name)
+            },
             Err(_err) => {
                 let response = Response::builder()
                     .status(StatusCode::BAD_REQUEST)
@@ -37,6 +46,7 @@ async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRespons
                 return Ok(response);
             }
         };
+    
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
             let mut buf = Vec::new();
@@ -79,7 +89,7 @@ async fn download_file_with_aes(
 ) -> Result<impl IntoResponse, Infallible> {
     let (file_path_to_file, file_name) =
         match connection_to_db::get_name_and_path_of_file(short_url).await {
-            Ok((file_path, file_name)) => (file_path, file_name),
+            Ok((file_path, file_name, _)) => (file_path, file_name),
             Err(_err) => {
                 let response = Response::builder()
                     .status(StatusCode::BAD_REQUEST)
@@ -211,6 +221,7 @@ async fn upload_file(
                     &new_filename,
                     &file_name,
                     generated_short_path.clone(),
+                    true
                 )
                 .await
                 {
@@ -254,6 +265,7 @@ async fn upload_file(
             &new_filename,
             &file_name,
             generated_short_path.clone(),
+            false
         )
         .await
         {
