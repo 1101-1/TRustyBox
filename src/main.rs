@@ -10,7 +10,7 @@ use axum::{
     Json,
 };
 
-use encryption::{decrypt_data, encrypt_data, set_aes_key};
+use encryption::{convert_aes_to_base64, decrypt_data, encrypt_data, set_aes_key};
 
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
@@ -35,10 +35,10 @@ async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRespons
                         .status(StatusCode::BAD_REQUEST)
                         .body("Insert the AES key into URL".into())
                         .unwrap();
-                    return Ok(response)
+                    return Ok(response);
                 }
                 (file_path, file_name)
-            },
+            }
             Err(_err) => {
                 let response = Response::builder()
                     .status(StatusCode::BAD_REQUEST)
@@ -47,7 +47,7 @@ async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRespons
                 return Ok(response);
             }
         };
-    
+
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
             let mut buf = Vec::new();
@@ -102,7 +102,7 @@ async fn download_file_with_aes(
 
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
-            let key_vec = match general_purpose::URL_SAFE_NO_PAD.decode(aes_key) {
+            let key_bytes = match convert_aes_to_base64(aes_key).await {
                 Ok(key) => key,
                 Err(_err) => {
                     let response = Response::builder()
@@ -113,21 +113,10 @@ async fn download_file_with_aes(
                 }
             };
 
-            let key_array: [u8; 32] = match key_vec.try_into() {
-                Ok(key) => key,
-                Err(_err) => {
-                    let response = Response::builder()
-                        .status(StatusCode::NOT_FOUND)
-                        .body("Invalid key length or symbols".into())
-                        .unwrap();
-                    return Ok(response);
-                }
-            };
-
             let mut buf = Vec::new();
             file.read_to_end(&mut buf).await.unwrap();
 
-            let data = decrypt_data(&buf, key_array).await.unwrap();
+            let data = decrypt_data(&buf, key_bytes).await.unwrap();
 
             let len = data.len();
 
@@ -222,7 +211,7 @@ async fn upload_file(
                     &new_filename,
                     &file_name,
                     generated_short_path.clone(),
-                    true
+                    true,
                 )
                 .await
                 {
@@ -266,7 +255,7 @@ async fn upload_file(
             &new_filename,
             &file_name,
             generated_short_path.clone(),
-            false
+            false,
         )
         .await
         {
