@@ -1,3 +1,4 @@
+use axum_extra::routing::RouterExt;
 use base64::{engine::general_purpose, Engine};
 use dotenv::dotenv;
 
@@ -9,7 +10,7 @@ use axum::{
     Json,
 };
 
-use encryption::{decrypt_data, encrypt_data, set_aes_key};
+use encryption::{convert_aes_to_base64, decrypt_data, encrypt_data, set_aes_key};
 
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
@@ -34,10 +35,10 @@ async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRespons
                         .status(StatusCode::BAD_REQUEST)
                         .body("Insert the AES key into URL".into())
                         .unwrap();
-                    return Ok(response)
+                    return Ok(response);
                 }
                 (file_path, file_name)
-            },
+            }
             Err(_err) => {
                 let response = Response::builder()
                     .status(StatusCode::BAD_REQUEST)
@@ -46,7 +47,7 @@ async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRespons
                 return Ok(response);
             }
         };
-    
+
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
             let mut buf = Vec::new();
@@ -101,7 +102,7 @@ async fn download_file_with_aes(
 
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
-            let key_vec = match general_purpose::URL_SAFE_NO_PAD.decode(aes_key) {
+            let key_bytes = match convert_aes_to_base64(aes_key).await {
                 Ok(key) => key,
                 Err(_err) => {
                     let response = Response::builder()
@@ -112,21 +113,10 @@ async fn download_file_with_aes(
                 }
             };
 
-            let key_array: [u8; 32] = match key_vec.try_into() {
-                Ok(key) => key,
-                Err(_err) => {
-                    let response = Response::builder()
-                        .status(StatusCode::NOT_FOUND)
-                        .body("Invalid key length or symbols".into())
-                        .unwrap();
-                    return Ok(response);
-                }
-            };
-
             let mut buf = Vec::new();
             file.read_to_end(&mut buf).await.unwrap();
 
-            let data = decrypt_data(&buf, key_array).await.unwrap();
+            let data = decrypt_data(&buf, key_bytes).await.unwrap();
 
             let len = data.len();
 
@@ -164,7 +154,7 @@ async fn upload_file(
     Query(payload): Query<UploadPayload>,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, Infallible> {
-    if let Some(mut field) = multipart.next_field().await.unwrap() {
+    while let Some(mut field) = multipart.next_field().await.unwrap() {
         let file_name = field.file_name().unwrap().to_owned();
         let new_filename = match file_name.split('.').last() {
             Some(extension) => format!("{}.{}", tools::generate_uuid_v4().await, extension),
@@ -215,13 +205,13 @@ async fn upload_file(
                 };
                 file.write_all(&encrypted_data).await.unwrap();
                 file.flush().await.unwrap();
-                drop(file);
+                // drop(file);
                 match connection_to_db::insert_to_mongodb(
                     &file_path,
                     &new_filename,
                     &file_name,
                     generated_short_path.clone(),
-                    true
+                    true,
                 )
                 .await
                 {
@@ -259,13 +249,13 @@ async fn upload_file(
             file.flush().await.unwrap();
         }
 
-        drop(file);
+        // drop(file);
         match connection_to_db::insert_to_mongodb(
             &file_path,
             &new_filename,
             &file_name,
             generated_short_path.clone(),
-            false
+            false,
         )
         .await
         {
@@ -292,15 +282,14 @@ async fn upload_file(
             aes_key: None,
         };
         return Ok((StatusCode::OK, Json(response)));
-    } else {
-        let response = UploadResponse {
+    }
+    let response = UploadResponse {
             short_path: None,
             full_url: None,
             error: Some("FILE to download NOT FOUND".to_string()),
             aes_key: None,
         };
-        return Ok((StatusCode::BAD_REQUEST, Json(response)));
-    }
+    return Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(response)));
 }
 
 #[derive(Deserialize)]
@@ -323,8 +312,8 @@ async fn main() {
     let app = Router::new()
         .route("/", post(upload_file))
         .layer(DefaultBodyLimit::max(MAX_FILE_SIZE))
-        .route("/:path", get(download_file))
-        .route("/:path/:aes_key", get(download_file_with_aes));
+        .route_with_tsr("/:path", get(download_file))
+        .route_with_tsr("/:path/:aes_key", get(download_file_with_aes));
 
     let addr = env::var("SERVER_ADDR")
         .expect("ADDR NOT FOUND")
