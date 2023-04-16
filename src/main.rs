@@ -154,7 +154,7 @@ async fn upload_file(
     Query(payload): Query<UploadPayload>,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, Infallible> {
-    if let Some(mut field) = multipart.next_field().await.unwrap() {
+    while let Some(mut field) = multipart.next_field().await.unwrap() {
         let file_name = field.file_name().unwrap().to_owned();
         let new_filename = match file_name.split('.').last() {
             Some(extension) => format!("{}.{}", tools::generate_uuid_v4().await, extension),
@@ -205,7 +205,7 @@ async fn upload_file(
                 };
                 file.write_all(&encrypted_data).await.unwrap();
                 file.flush().await.unwrap();
-                drop(file);
+                // drop(file);
                 match connection_to_db::insert_to_mongodb(
                     &file_path,
                     &new_filename,
@@ -249,7 +249,7 @@ async fn upload_file(
             file.flush().await.unwrap();
         }
 
-        drop(file);
+        // drop(file);
         match connection_to_db::insert_to_mongodb(
             &file_path,
             &new_filename,
@@ -282,15 +282,14 @@ async fn upload_file(
             aes_key: None,
         };
         return Ok((StatusCode::OK, Json(response)));
-    } else {
-        let response = UploadResponse {
+    }
+    let response = UploadResponse {
             short_path: None,
             full_url: None,
             error: Some("FILE to download NOT FOUND".to_string()),
             aes_key: None,
         };
-        return Ok((StatusCode::BAD_REQUEST, Json(response)));
-    }
+    return Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(response)));
 }
 
 #[derive(Deserialize)]
