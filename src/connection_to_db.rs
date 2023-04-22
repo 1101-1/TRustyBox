@@ -16,7 +16,7 @@ pub async fn insert_to_mongodb(
     mut short_path_url: String,
     is_aes: bool,
 ) -> mongodb::error::Result<()> {
-    let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error"))
+    let client_options = ClientOptions::parse(env::var("MONGO").expect("MONGO_ADDR doesn't set"))
         .await
         .unwrap();
 
@@ -24,13 +24,13 @@ pub async fn insert_to_mongodb(
 
     let db = client.database(
         env::var("DATABASE_NAME")
-            .expect("Unexpected error")
+            .expect("DATABASE_NAME doesn't set")
             .as_str(),
     );
 
     let collection = db.collection(
         env::var("COLLECTION_NAME")
-            .expect("Unexpected error")
+            .expect("COLLECTION_NAME doesn't set")
             .as_str(),
     );
 
@@ -56,7 +56,7 @@ pub async fn insert_to_mongodb(
 
 #[async_recursion]
 async fn find_dublicate(short_url: String) -> String {
-    let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error"))
+    let client_options = ClientOptions::parse(env::var("MONGO").expect("MONGO_ADDR doesn't set"))
         .await
         .unwrap();
 
@@ -64,13 +64,13 @@ async fn find_dublicate(short_url: String) -> String {
 
     let db = client.database(
         env::var("DATABASE_NAME")
-            .expect("Unexpected error")
+            .expect("DATABASE_NAME doesn't set")
             .as_str(),
     );
 
     let collection: Collection<Document> = db.collection(
         env::var("COLLECTION_NAME")
-            .expect("Unexpected error")
+            .expect("COLLECTION_NAME doesn't set")
             .as_str(),
     );
 
@@ -88,18 +88,19 @@ async fn find_dublicate(short_url: String) -> String {
 pub async fn get_name_and_path_of_file(
     db_short_url: String,
 ) -> mongodb::error::Result<(String, String, bool)> {
-    let client_options = ClientOptions::parse(env::var("MONGO").expect("Unexpected error")).await?;
+    let client_options =
+        ClientOptions::parse(env::var("MONGO").expect("MONGO_ADDR doesn't set")).await?;
 
     let client = Client::with_options(client_options)?;
 
     let db = client.database(
         env::var("DATABASE_NAME")
-            .expect("Unexpected error")
+            .expect("DATABASE_NAME doesn't set")
             .as_str(),
     );
     let collection: Collection<Document> = db.collection(
         env::var("COLLECTION_NAME")
-            .expect("Unexpected error")
+            .expect("COLLECTION_NAME doesn't set")
             .as_str(),
     );
 

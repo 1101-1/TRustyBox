@@ -1,5 +1,4 @@
 use axum_extra::routing::RouterExt;
-use base64::{engine::general_purpose, Engine};
 use dotenv::dotenv;
 
 use axum::{
@@ -10,7 +9,9 @@ use axum::{
     Json,
 };
 
-use encryption::{convert_aes_to_base64, decrypt_data, encrypt_data, set_aes_key};
+use encryption::{
+    convert_aes_to_base64, decrypt_data, encrypt_data, get_aes_key_from_base64, set_aes_key,
+};
 
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
@@ -102,7 +103,7 @@ async fn download_file_with_aes(
 
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
-            let key_bytes = match convert_aes_to_base64(aes_key).await {
+            let key_bytes = match get_aes_key_from_base64(aes_key).await {
                 Ok(key) => key,
                 Err(_err) => {
                     let response = Response::builder()
@@ -189,7 +190,7 @@ async fn upload_file(
                 }
 
                 let aes_key = set_aes_key().await;
-                let encoded_key = general_purpose::URL_SAFE_NO_PAD.encode(aes_key);
+                let encoded_key = convert_aes_to_base64(aes_key).await;
 
                 let encrypted_data = match encrypt_data(&data, aes_key).await {
                     Ok(encrypted_data) => encrypted_data,
@@ -205,7 +206,7 @@ async fn upload_file(
                 };
                 file.write_all(&encrypted_data).await.unwrap();
                 file.flush().await.unwrap();
-                // drop(file);
+                drop(file);
                 match connection_to_db::insert_to_mongodb(
                     &file_path,
                     &new_filename,
@@ -249,7 +250,7 @@ async fn upload_file(
             file.flush().await.unwrap();
         }
 
-        // drop(file);
+        drop(file);
         match connection_to_db::insert_to_mongodb(
             &file_path,
             &new_filename,
@@ -284,11 +285,11 @@ async fn upload_file(
         return Ok((StatusCode::OK, Json(response)));
     }
     let response = UploadResponse {
-            short_path: None,
-            full_url: None,
-            error: Some("FILE to download NOT FOUND".to_string()),
-            aes_key: None,
-        };
+        short_path: None,
+        full_url: None,
+        error: Some("FILE to download NOT FOUND".to_string()),
+        aes_key: None,
+    };
     return Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(response)));
 }
 
