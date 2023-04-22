@@ -46,13 +46,13 @@ pub async fn decrypt_data(buf: &[u8], aes_key: [u8; 32]) -> Result<Vec<u8>, toki
     Ok(decrypted_data)
 }
 
-pub async fn get_aes_key_from_base64(aes_key: String) -> Result<[u8; 32], tokio::io::Error> {
-    let key_vec = match convert_base64_to_aes(aes_key).await {
+pub async fn convert_base64_to_aes(aes_key: String) -> Result<[u8; 32], tokio::io::Error> {
+    let key_vec = match general_purpose::URL_SAFE_NO_PAD.decode(aes_key) {
         Ok(key) => key,
         Err(_err) => {
             return Err(tokio::io::Error::new(
                 tokio::io::ErrorKind::Other,
-                "Can not convert aes_key into base64",
+                "Can not convert to base64",
             ))
         }
     };
@@ -67,10 +67,6 @@ pub async fn get_aes_key_from_base64(aes_key: String) -> Result<[u8; 32], tokio:
         }
     };
     Ok(key_array)
-}
-
-async fn convert_base64_to_aes(aes_key: String) -> Result<Vec<u8>, base64::DecodeError> {
-    general_purpose::URL_SAFE_NO_PAD.decode(aes_key)
 }
 
 pub async fn convert_aes_to_base64(aes_bytes: [u8; 32]) -> String {
