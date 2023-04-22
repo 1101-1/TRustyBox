@@ -88,7 +88,8 @@ async fn find_dublicate(short_url: String) -> String {
 pub async fn get_name_and_path_of_file(
     db_short_url: String,
 ) -> mongodb::error::Result<(String, String, bool)> {
-    let client_options = ClientOptions::parse(env::var("MONGO").expect("MONGO_ADDR doesn't set")).await?;
+    let client_options =
+        ClientOptions::parse(env::var("MONGO").expect("MONGO_ADDR doesn't set")).await?;
 
     let client = Client::with_options(client_options)?;
 

@@ -9,7 +9,9 @@ use axum::{
     Json,
 };
 
-use encryption::{convert_base64_to_aes, convert_aes_to_base64, decrypt_data, encrypt_data, set_aes_key};
+use encryption::{
+    convert_aes_to_base64, convert_base64_to_aes, decrypt_data, encrypt_data, set_aes_key,
+};
 
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
@@ -204,7 +206,7 @@ async fn upload_file(
                 };
                 file.write_all(&encrypted_data).await.unwrap();
                 file.flush().await.unwrap();
-                // drop(file);
+                drop(file);
                 match connection_to_db::insert_to_mongodb(
                     &file_path,
                     &new_filename,
@@ -248,7 +250,7 @@ async fn upload_file(
             file.flush().await.unwrap();
         }
 
-        // drop(file);
+        drop(file);
         match connection_to_db::insert_to_mongodb(
             &file_path,
             &new_filename,
@@ -283,11 +285,11 @@ async fn upload_file(
         return Ok((StatusCode::OK, Json(response)));
     }
     let response = UploadResponse {
-            short_path: None,
-            full_url: None,
-            error: Some("FILE to download NOT FOUND".to_string()),
-            aes_key: None,
-        };
+        short_path: None,
+        full_url: None,
+        error: Some("FILE to download NOT FOUND".to_string()),
+        aes_key: None,
+    };
     return Ok((StatusCode::INTERNAL_SERVER_ERROR, Json(response)));
 }
 

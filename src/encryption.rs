@@ -51,7 +51,7 @@ pub async fn convert_base64_to_aes(aes_key: String) -> Result<[u8; 32], tokio::i
         Ok(key) => key,
         Err(_err) => {
             return Err(tokio::io::Error::new(
-                std::io::ErrorKind::Other,
+                tokio::io::ErrorKind::Other,
                 "Can not convert to base64",
             ))
         }
@@ -61,7 +61,7 @@ pub async fn convert_base64_to_aes(aes_key: String) -> Result<[u8; 32], tokio::i
         Ok(key) => key,
         Err(_err) => {
             return Err(tokio::io::Error::new(
-                std::io::ErrorKind::Other,
+                tokio::io::ErrorKind::Other,
                 "Can not convert to bytes",
             ))
         }
