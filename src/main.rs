@@ -10,7 +10,7 @@ use axum::{
 };
 
 use encryption::{
-    convert_aes_to_base64, convert_base64_to_aes, decrypt_data, encrypt_data, set_aes_key,
+    convert_aes_to_base64, decrypt_data, encrypt_data, get_aes_key_from_base64, set_aes_key,
 };
 
 use futures::TryStreamExt;
@@ -103,7 +103,7 @@ async fn download_file_with_aes(
 
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
-            let key_bytes = match convert_base64_to_aes(aes_key).await {
+            let key_bytes = match get_aes_key_from_base64(aes_key).await {
                 Ok(key) => key,
                 Err(_err) => {
                     let response = Response::builder()
