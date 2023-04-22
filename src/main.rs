@@ -1,5 +1,4 @@
 use axum_extra::routing::RouterExt;
-use base64::{engine::general_purpose, Engine};
 use dotenv::dotenv;
 
 use axum::{
@@ -10,7 +9,7 @@ use axum::{
     Json,
 };
 
-use encryption::{convert_aes_to_base64, decrypt_data, encrypt_data, set_aes_key};
+use encryption::{convert_base64_to_aes, convert_aes_to_base64, decrypt_data, encrypt_data, set_aes_key};
 
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
@@ -102,7 +101,7 @@ async fn download_file_with_aes(
 
     match tokio::fs::File::open(&file_path_to_file).await {
         Ok(mut file) => {
-            let key_bytes = match convert_aes_to_base64(aes_key).await {
+            let key_bytes = match convert_base64_to_aes(aes_key).await {
                 Ok(key) => key,
                 Err(_err) => {
                     let response = Response::builder()
@@ -189,7 +188,7 @@ async fn upload_file(
                 }
 
                 let aes_key = set_aes_key().await;
-                let encoded_key = general_purpose::URL_SAFE_NO_PAD.encode(aes_key);
+                let encoded_key = convert_aes_to_base64(aes_key).await;
 
                 let encrypted_data = match encrypt_data(&data, aes_key).await {
                     Ok(encrypted_data) => encrypted_data,
