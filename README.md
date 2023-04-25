@@ -42,18 +42,16 @@ This will start the server on `http://127.0.0.1:8080/` or by DATA in `env::var("
 
 Second step is go to the `frontend` directory by `cd frontend/` command on Linux system.
 
-First, you need to change `FileUploadForm.js` file.
+First, you need to change `upload-form.ts` file.
 
-```Javascript
-const url = `http://<addr>${encryptionType ? `/?encryption=${encryptionType}` : ""}`;
+```Typescript
+const url = `<addr>${
+      this.encryptionType ? `/?encryption=${this.encryptionType}` : ''
+    }`;
 ```
 where <addr> is your server addres like `127.0.0.1:8080`.
 
-And you need to chage `"proxy"` field in `package.json` file.
-Set up `"proxy": "<addr>"`, where `<addr>` is addres of your server. By standart it `http://127.0.0.1:8080`
-
-
-In `frontend` directory, you need to write `npm start` and frontend part will be started.
+In `frontend` directory, you need to write `npm run build` and after `npm run dev` and frontend part will be started.
 
 ### Uploading Files
 
@@ -68,7 +66,7 @@ Otherwise, if we need to upload encrypted file on server, we can use query. Here
 
 Second way, is go to address where your `frontend` part starts.
 
-By standart is `127.0.0.1:3000`.
+By standart is `127.0.0.1:5173`.
 
 ### Download Files
 To get file from server if you used cURL, we need to go on the following link:
