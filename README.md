@@ -40,9 +40,13 @@ To run the project, first clone the repository and navigate to the project direc
 
 This will start the server on `http://127.0.0.1:8080/` or by DATA in `env::var("SERVER_ADDR")`.
 
+Second step is go to the `frontend` directory by `cd frontend/` command on Linux system.
+
+In this directory, you need to write `npm start` and frontend part will be started.
+
 ### Uploading Files
 
-To upload a file to the server, you can use `curl` in your terminal. For example, to upload a file called `example.txt` without encryption by default, you can run the following command:
+To upload a file to the server, you can use `curl` in your terminal as one of the ways. For example, to upload a file called `example.txt` without encryption by default, you can run the following command:
 
 `curl -X POST -F "file=@example.txt" http://127.0.0.1:8080/`
 
@@ -51,8 +55,19 @@ Otherwise, if we need to upload encrypted file on server, we can use query. Here
 
 `curl -X POST -F "file=@example.txt" http://127.0.0.1:8080/?encryption=aes/`
 
+Second way, is go to address where your `frontend` part starts.
+First, you need to change `FileUploadForm.js` file.
+
+```Javascript
+const url = `http://<addr>${encryptionType ? `/?encryption=${encryptionType}` : ""}`;
+```
+where <addr> is your server addres like `127.0.0.1:8080`.
+
+And you need to chage `"proxy"` field in `package.json` file.
+Set up `"proxy": "<addr>"`, where `<addr>` is addres of your server. By standart it `http://127.0.0.1:8080`
+
 ### Download Files
-To get file from server, we need to go on the following link:
+To get file from server if you used cURL, we need to go on the following link:
 
 `http://127.0.0.1:8080/<short_path>/`
 
@@ -60,5 +75,7 @@ If file was encrypted, instead need to use `http://127.0.0.1:8080/<short_path>/<
 
 In our case  `<short_path>` is unique generated_path inserted in MongoDB and `<aes_key>` is generated <aes_key> by server, which is not stored it.
 
+If we use frontend part, you can see needed information in `Response Data` field.
+
 ### Conclusion
-With this project, you can easily create a secure file hosting service with `MongoDB` authentication and encrypted files. By following the steps outlined above, you can set up `MongoDB`, run the project, and start uploading files to your own secure file hosting service written on Axum.
+With this project, you can easily create a secure file hosting service with `MongoDB` authentication and encrypted files. By following the steps outlined above, you can set up `MongoDB`, run the project, and start uploading files to your own secure file hosting service written on Axum. And if you want, you can also run frontend part =)
