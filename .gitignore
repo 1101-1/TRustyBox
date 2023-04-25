@@ -1,6 +1,7 @@
 /target
+**/*.rs.bk
 .env
-/folder_for_downloaded_files
-/files_to_send
 /files
 Cargo.lock
+frontend/node_modules
+frontend/build

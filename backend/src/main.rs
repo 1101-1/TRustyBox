@@ -8,6 +8,7 @@ use axum::{
     routing::{get, post, Router},
     Json,
 };
+use tower_http::cors::{Any, CorsLayer};
 
 use encryption::{
     convert_aes_to_base64, convert_base64_to_aes, decrypt_data, encrypt_data, set_aes_key,
@@ -310,9 +311,12 @@ struct UploadResponse {
 async fn main() {
     dotenv().ok();
 
+    let cors = CorsLayer::new().allow_origin(Any);
+
     let app = Router::new()
         .route("/", post(upload_file))
         .layer(DefaultBodyLimit::max(MAX_FILE_SIZE))
+        .layer(cors)
         .route_with_tsr("/:path", get(download_file))
         .route_with_tsr("/:path/:aes_key", get(download_file_with_aes));
 
