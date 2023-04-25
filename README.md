@@ -36,7 +36,7 @@ If you doing all correctly, your code will work.
 
 To run the project, first clone the repository and navigate to the project directory. Then, run the following command in `cmd` to start the server:
 
-`cargo run`
+`cargo run --bin backend`
 
 This will start the server on `http://127.0.0.1:8080/` or by DATA in `env::var("SERVER_ADDR")`.
 
