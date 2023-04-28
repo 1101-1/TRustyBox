@@ -6,7 +6,7 @@ use mongodb::{
 };
 use std::env;
 
-use crate::tools::generate_short_path_url::generate_short_path_url;
+use crate::tools::short_url::generate_short_path_url;
 
 #[async_recursion]
 pub async fn find_dublicate(short_url: String) -> String {

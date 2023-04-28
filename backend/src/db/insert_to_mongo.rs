@@ -1,4 +1,4 @@
-use crate::tools::generate_short_path_url::generate_short_path_url;
+use crate::tools::short_url::generate_short_path_url;
 use mongodb::{bson::doc, options::ClientOptions, Client};
 use std::env;
 
