@@ -1,7 +1,7 @@
 use crate::crypt::base64_convert::convert_base64_to_aes;
 use crate::crypt::decryption::decrypt_data;
 use crate::db::get_name_and_path_of_file::get_name_and_path_of_file;
-use crate::tools::check_content_type::check_content_type;
+use crate::tools::content_type::check_content_type;
 
 use std::convert::Infallible;
 use tokio::io::AsyncReadExt;
