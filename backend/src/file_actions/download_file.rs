@@ -24,7 +24,11 @@ pub async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRes
             }
             (file_path, file_name)
         }
-        Err(_err) => {
+        Err(err) => {
+            tracing::error!(
+                %err,
+                "Taking data from db is failed"
+            );
             let response = Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body("URL or FILE not found".into())
@@ -60,7 +64,11 @@ pub async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRes
 
             Ok(response)
         }
-        Err(_) => {
+        Err(err) => {
+            tracing::error!(
+                %err,
+                "Path to file is incorrect"
+            );
             let response = Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body("FILE or URL not found".into())
@@ -75,7 +83,11 @@ pub async fn download_file_with_aes(
 ) -> Result<impl IntoResponse, Infallible> {
     let (file_path_to_file, file_name) = match get_name_and_path_of_file(short_url).await {
         Ok((file_path, file_name, _)) => (file_path, file_name),
-        Err(_err) => {
+        Err(err) => {
+            tracing::error!(
+                %err,
+                "Taking data from db is failed"
+            );
             let response = Response::builder()
                 .status(StatusCode::BAD_REQUEST)
                 .body("URL or FILE not found".into())
@@ -124,7 +136,11 @@ pub async fn download_file_with_aes(
 
             return Ok(response);
         }
-        Err(_) => {
+        Err(err) => {
+            tracing::error!(
+                %err,
+                "Path to file is incorrect"
+            );
             let response = Response::builder()
                 .status(StatusCode::NOT_FOUND)
                 .body("FILE or URL not found".into())

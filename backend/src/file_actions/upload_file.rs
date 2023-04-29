@@ -1,8 +1,8 @@
 use crate::crypt::base64_convert::convert_aes_to_base64;
 use crate::crypt::{aes_key::set_aes_key, encryption::encrypt_data};
 use crate::db::insert_to_mongo::insert_to_mongodb;
-use crate::tools::short_url::generate_short_path_url;
 use crate::tools::generate_uuid::generate_uuid_v4;
+use crate::tools::short_url::generate_short_path_url;
 
 use futures::TryStreamExt;
 use std::{convert::Infallible, env};
@@ -38,7 +38,11 @@ pub async fn upload_file(
 
         let mut file = match File::create(&file_path).await {
             Ok(file) => file,
-            Err(_err) => {
+            Err(err) => {
+                tracing::warn!(
+                    %err,
+                    "Cannot create file on created path"
+                );
                 let response = UploadResponse {
                     short_path: None,
                     full_url: None,
@@ -60,7 +64,11 @@ pub async fn upload_file(
 
                 let encrypted_data = match encrypt_data(&data, aes_key).await {
                     Ok(encrypted_data) => encrypted_data,
-                    Err(_err) => {
+                    Err(err) => {
+                        tracing::error!(
+                            %err,
+                            "Encryption is failed"
+                        );
                         let response = UploadResponse {
                             short_path: None,
                             full_url: None,
@@ -83,7 +91,11 @@ pub async fn upload_file(
                 .await
                 {
                     Ok(()) => (),
-                    Err(_err) => {
+                    Err(err) => {
+                        tracing::error!(
+                            %err,
+                            "Err to add info into db"
+                        );
                         let response = UploadResponse {
                             short_path: None,
                             full_url: None,
@@ -127,7 +139,11 @@ pub async fn upload_file(
         .await
         {
             Ok(()) => (),
-            Err(_err) => {
+            Err(err) => {
+                tracing::warn!(
+                    %err,
+                    "Err to add info into db"
+                );
                 let response = UploadResponse {
                     short_path: None,
                     full_url: None,
