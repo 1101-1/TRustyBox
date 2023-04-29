@@ -69,6 +69,8 @@ Second way, is go to address where your `frontend` part starts.
 By standart is `127.0.0.1:5173`.
 
 ### Download Files
+
+`ONLY BACKEND PART`
 To get file from server if you used cURL, we need to go on the following link:
 
 `http://127.0.0.1:8080/<short_path>/`
@@ -77,6 +79,7 @@ If file was encrypted, instead need to use `http://127.0.0.1:8080/<short_path>/<
 
 In our case  `<short_path>` is unique generated_path inserted in MongoDB and `<aes_key>` is generated <aes_key> by server, which is not stored it.
 
+`WITH FRONTEND PART`
 If we use frontend part, you can see needed information in `Response Data` field.
 
 ### Conclusion
