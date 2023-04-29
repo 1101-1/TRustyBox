@@ -38,7 +38,11 @@ pub async fn upload_file(
 
         let mut file = match File::create(&file_path).await {
             Ok(file) => file,
-            Err(_err) => {
+            Err(err) => {
+                tracing::warn!(
+                    %err,
+                    "Cannot create file on created path"
+                );
                 let response = UploadResponse {
                     short_path: None,
                     full_url: None,
@@ -60,7 +64,11 @@ pub async fn upload_file(
 
                 let encrypted_data = match encrypt_data(&data, aes_key).await {
                     Ok(encrypted_data) => encrypted_data,
-                    Err(_err) => {
+                    Err(err) => {
+                        tracing::error!(
+                            %err,
+                            "Encryption is failed"
+                        );
                         let response = UploadResponse {
                             short_path: None,
                             full_url: None,
@@ -83,7 +91,11 @@ pub async fn upload_file(
                 .await
                 {
                     Ok(()) => (),
-                    Err(_err) => {
+                    Err(err) => {
+                        tracing::error!(
+                            %err,
+                            "Err to add info into db"
+                        );
                         let response = UploadResponse {
                             short_path: None,
                             full_url: None,
@@ -127,7 +139,11 @@ pub async fn upload_file(
         .await
         {
             Ok(()) => (),
-            Err(_err) => {
+            Err(err) => {
+                tracing::warn!(
+                    %err,
+                    "Err to add info into db"
+                );
                 let response = UploadResponse {
                     short_path: None,
                     full_url: None,
