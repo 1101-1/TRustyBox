@@ -5,13 +5,14 @@ use axum::{
     extract::DefaultBodyLimit,
     routing::{get, post, Router},
 };
-use tower_http::cors::{Any, CorsLayer};
-
 use std::env;
 
-use crate::file_actions::download_file::{download_file, download_file_with_aes};
-use crate::file_actions::upload_file;
+use crate::{file_actions::upload_file, tools::http_tools::get_favicon::favicon};
 use crate::upload_file::upload_file;
+use crate::{
+    file_actions::download_file::{download_file, download_file_with_aes},
+    tools::http_tools::cors::create_cors,
+};
 
 mod crypt;
 mod db;
@@ -26,12 +27,11 @@ async fn main() {
 
     tracing_subscriber::fmt::init();
 
-    let cors = CorsLayer::new().allow_origin(Any);
-
     let app = Router::new()
+        .route_with_tsr("/favicon.ico", get(favicon))
         .route("/", post(upload_file))
         .layer(DefaultBodyLimit::max(MAX_FILE_SIZE))
-        .layer(cors)
+        .layer(create_cors())
         .route_with_tsr("/:path", get(download_file))
         .route_with_tsr("/:path/:aes_key", get(download_file_with_aes));
 

@@ -122,5 +122,3 @@ export class UploadForm extends LitElement {
     `;
   }
 }
-
-customElements.define('upload-form', UploadForm);
