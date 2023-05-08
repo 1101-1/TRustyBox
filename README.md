@@ -82,5 +82,5 @@ In our case  `<short_path>` is unique generated_path inserted in MongoDB and `<a
 `WITH FRONTEND PART`
 If we use frontend part, you can see needed information in `Response Data` field.
 
-### Conclusion
-With this project, you can easily create a secure file hosting service with `MongoDB` authentication and encrypted files. By following the steps outlined above, you can set up `MongoDB`, run the project, and start uploading files to your own secure file hosting service written on Axum. And if you want, you can also run frontend part =)
+### Additional info's
+You also can check my [telegram bot](https://github.com/1101-1/TRustyBox_telegram_bot), that works with TRustyBox.
