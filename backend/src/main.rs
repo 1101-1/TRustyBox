@@ -28,10 +28,10 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route_with_tsr("/favicon.ico", get(favicon))
         .route("/", post(upload_file))
         .layer(DefaultBodyLimit::max(MAX_FILE_SIZE))
         .layer(create_cors())
+        .route_with_tsr("/favicon.ico", get(favicon))
         .route_with_tsr("/:path", get(download_file))
         .route_with_tsr("/:path/:aes_key", get(download_file_with_aes));
 
