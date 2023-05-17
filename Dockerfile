@@ -1,29 +1,27 @@
-FROM rust:1.67 as rust-builder
+FROM rust:1.67 as builder
 
-# Install nodejs, npm and http-server
+RUN apt-get update && apt-get install -y curl
 RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt-get update && apt-get install -y nodejs
-RUN npm install -g http-server
+RUN apt-get install -y nodejs
 
-# Create app directory and copy backend
 WORKDIR /trustybox
 COPY ./.env ./
 COPY ./backend ./backend
 
-# Build the backend with release profile
 WORKDIR /trustybox/backend
 RUN cargo build --release
 
-# Copy frontend and build it
 WORKDIR /trustybox
 COPY ./frontend ./frontend
 WORKDIR /trustybox/frontend
 RUN npm install
 RUN npm run build
 
-# Switch back to the root directory
-WORKDIR /trustybox
+FROM rust:1.67-slim
 
+COPY --from=builder /trustybox/backend/target/release/backend /app/backend
+
+# Expose ports
 EXPOSE 8080
 EXPOSE 5173
 
