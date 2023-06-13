@@ -7,12 +7,12 @@ use axum::{
 };
 use std::env;
 
-use crate::{file_actions::upload_file, tools::http_tools::get_favicon::favicon};
 use crate::upload_file::upload_file;
 use crate::{
     file_actions::download_file::{download_file, download_file_with_aes},
     tools::http_tools::cors::create_cors,
 };
+use crate::{file_actions::upload_file, tools::http_tools::get_favicon::favicon};
 
 mod crypt;
 mod db;
