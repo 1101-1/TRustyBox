@@ -26,3 +26,22 @@ pub async fn convert_base64_to_aes(aes_key: String) -> Result<[u8; 32], tokio::i
 pub async fn convert_aes_to_base64(aes_bytes: [u8; 32]) -> String {
     general_purpose::URL_SAFE_NO_PAD.encode(aes_bytes)
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::crypt::aes_key::set_aes_key;
+    use crate::crypt::base64_convert::convert_aes_to_base64;
+    use crate::crypt::base64_convert::convert_base64_to_aes;
+
+    #[tokio::test]
+    async fn convert_correct() {
+        let key = set_aes_key().await;
+        let base_str = convert_aes_to_base64(key).await;
+
+        assert_eq!(convert_base64_to_aes(base_str.clone()).await.unwrap(), key);
+
+        assert_eq!(convert_aes_to_base64(key.clone()).await, base_str);
+    }
+}
