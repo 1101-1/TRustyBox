@@ -20,3 +20,14 @@ pub async fn generate_short_path_url() -> String {
 
     short_url.iter().collect::<String>()
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use crate::tools::short_url;
+    #[tokio::test]
+    async fn len_matches() {
+        assert_eq!(short_url::generate_short_path_url().await.len(), 8)
+    }
+}

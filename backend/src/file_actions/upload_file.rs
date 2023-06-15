@@ -74,7 +74,8 @@ async fn upload_without_ecrypt(
         }
 
         drop(file);
-        match insert_to_mongodb(
+
+        if let Err(err) = insert_to_mongodb(
             &file_path,
             &new_filename,
             &file_name,
@@ -83,19 +84,16 @@ async fn upload_without_ecrypt(
         )
         .await
         {
-            Ok(()) => (),
-            Err(err) => {
-                tracing::warn!(
-                    %err,
-                    "Err to add info into db"
-                );
-                return upload_err_resp(
-                    String::from("Could not insert information to database. Try again"),
-                    StatusCode::BAD_REQUEST,
-                )
-                .await;
-            }
-        };
+            tracing::warn!(
+                %err,
+                "Err to add info into db"
+            );
+            return upload_err_resp(
+                String::from("Could not insert information to database. Try again"),
+                StatusCode::BAD_REQUEST,
+            )
+            .await;
+        }
 
         let response = UploadResponse {
             short_path: Some(generated_short_path.clone()),
@@ -176,28 +174,25 @@ async fn upload_with_aes_ecnrypt(
         file.flush().await.unwrap();
         drop(file);
 
-        match insert_to_mongodb(
+        if let Err(err) = insert_to_mongodb(
             &file_path,
             &new_filename,
             &file_name,
             generated_short_path.clone(),
-            true,
+            false,
         )
         .await
         {
-            Ok(()) => (),
-            Err(err) => {
-                tracing::error!(
-                    %err,
-                    "Err to add info into db"
-                );
-                return upload_err_resp(
-                    String::from("Could not insert information to database. Try again"),
-                    StatusCode::BAD_REQUEST,
-                )
-                .await;
-            }
-        };
+            tracing::warn!(
+                %err,
+                "Err to add info into db"
+            );
+            return upload_err_resp(
+                String::from("Could not insert information to database. Try again"),
+                StatusCode::BAD_REQUEST,
+            )
+            .await;
+        }
 
         let response = UploadResponse {
             short_path: Some(generated_short_path.clone()),
