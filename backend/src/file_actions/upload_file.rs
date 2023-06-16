@@ -18,6 +18,7 @@ use axum::{
 };
 
 use super::resp_errors::upload_err_resp;
+use super::types::file_type::FileData;
 use super::types::upload_types::{UploadPayload, UploadResponse};
 
 pub async fn upload_file(
@@ -53,7 +54,15 @@ async fn upload_without_ecrypt(
             new_filename
         );
 
-        let mut file = match File::create(&file_path).await {
+        let file_data = FileData::new(
+            file_name,
+            new_filename,
+            file_path,
+            field.headers().to_owned(),
+        )
+        .await;
+
+        let mut file = match File::create(file_data.file_path.clone()).await {
             Ok(file) => file,
             Err(err) => {
                 tracing::warn!(
@@ -76,9 +85,9 @@ async fn upload_without_ecrypt(
         drop(file);
 
         if let Err(err) = insert_main_data(
-            &file_path,
-            &new_filename,
-            &file_name,
+            file_data.file_path.clone(),
+            file_data.new_name,
+            file_data.name,
             generated_short_path.clone(),
             false,
         )
@@ -132,7 +141,15 @@ async fn upload_with_aes_ecnrypt(
             new_filename
         );
 
-        let mut file = match File::create(&file_path).await {
+        let file_data = FileData::new(
+            file_name,
+            new_filename,
+            file_path,
+            field.headers().to_owned(),
+        )
+        .await;
+
+        let mut file = match File::create(file_data.file_path.clone()).await {
             Ok(file) => file,
             Err(err) => {
                 tracing::warn!(
@@ -175,9 +192,9 @@ async fn upload_with_aes_ecnrypt(
         drop(file);
 
         if let Err(err) = insert_main_data(
-            &file_path,
-            &new_filename,
-            &file_name,
+            file_data.file_path.clone(),
+            file_data.new_name,
+            file_data.name,
             generated_short_path.clone(),
             false,
         )

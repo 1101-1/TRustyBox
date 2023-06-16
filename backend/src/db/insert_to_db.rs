@@ -5,9 +5,9 @@ use std::env;
 use crate::db::dublicates::find_dublicate;
 
 pub async fn insert_main_data(
-    path_download: &String,
-    new_filename: &String,
-    first_name: &str,
+    path_download: String,
+    new_filename: String,
+    first_name: String,
     mut short_path_url: String,
     is_aes: bool,
 ) -> mongodb::error::Result<()> {

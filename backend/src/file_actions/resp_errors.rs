@@ -18,10 +18,7 @@ pub async fn upload_err_resp(
     return (status_code, Json(response));
 }
 
-pub async fn download_err_resp(
-    err: String, 
-    status_code: StatusCode
-) -> Response<axum::body::Body> {
+pub async fn download_err_resp(err: String, status_code: StatusCode) -> Response<axum::body::Body> {
     let response = Response::builder()
         .status(status_code)
         .body(err.into())
