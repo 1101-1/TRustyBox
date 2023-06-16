@@ -21,8 +21,6 @@ pub async fn generate_short_path_url() -> String {
     short_url.iter().collect::<String>()
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use crate::tools::short_url;

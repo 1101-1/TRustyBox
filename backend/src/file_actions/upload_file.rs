@@ -1,7 +1,6 @@
 use crate::crypt::base64_convert::convert_aes_to_base64;
 use crate::crypt::{aes_key::set_aes_key, encryption::encrypt_data};
-use crate::db::insert_info::insert_to_mongodb;
-use crate::tools::generate_uuid::generate_uuid_v4;
+use crate::db::insert_to_db::insert_main_data;
 use crate::tools::short_url::generate_short_path_url;
 
 use futures::TryStreamExt;
@@ -18,6 +17,7 @@ use axum::{
 };
 
 use super::resp_errors::upload_err_resp;
+use super::types::file_type::FileFullData;
 use super::types::upload_types::{UploadPayload, UploadResponse};
 
 pub async fn upload_file(
@@ -39,21 +39,15 @@ async fn upload_without_ecrypt(
     mut multipart: tokio::sync::MutexGuard<'_, Multipart>,
 ) -> (axum::http::StatusCode, Json<UploadResponse>) {
     while let Some(mut field) = multipart.next_field().await.unwrap() {
-        let file_name = field.file_name().unwrap().to_owned();
-        let new_filename = match file_name.split('.').last() {
-            Some(extension) => format!("{}.{}", generate_uuid_v4().await, extension),
-            None => generate_uuid_v4().await,
-        };
-
         let generated_short_path = generate_short_path_url().await;
 
-        let file_path = format!(
-            "{}{}",
-            env::var("PATH_TO_FILES").expect("Unexpected error"),
-            new_filename
-        );
+        let file_data = FileFullData::new(
+            field.file_name().unwrap().to_owned(),
+            field.headers().to_owned(),
+        )
+        .await;
 
-        let mut file = match File::create(&file_path).await {
+        let mut file = match File::create(file_data.file_path.clone()).await {
             Ok(file) => file,
             Err(err) => {
                 tracing::warn!(
@@ -75,10 +69,10 @@ async fn upload_without_ecrypt(
 
         drop(file);
 
-        if let Err(err) = insert_to_mongodb(
-            &file_path,
-            &new_filename,
-            &file_name,
+        if let Err(err) = insert_main_data(
+            file_data.file_path,
+            file_data.new_name,
+            file_data.main_data.name,
             generated_short_path.clone(),
             false,
         )
@@ -118,21 +112,15 @@ async fn upload_with_aes_ecnrypt(
     mut multipart: tokio::sync::MutexGuard<'_, Multipart>,
 ) -> (axum::http::StatusCode, Json<UploadResponse>) {
     while let Some(mut field) = multipart.next_field().await.unwrap() {
-        let file_name = field.file_name().unwrap().to_owned();
-        let new_filename = match file_name.split('.').last() {
-            Some(extension) => format!("{}.{}", generate_uuid_v4().await, extension),
-            None => generate_uuid_v4().await,
-        };
+        let file_data = FileFullData::new(
+            field.file_name().unwrap().to_owned(),
+            field.headers().to_owned(),
+        )
+        .await;
 
         let generated_short_path = generate_short_path_url().await;
 
-        let file_path = format!(
-            "{}{}",
-            env::var("PATH_TO_FILES").expect("Unexpected error"),
-            new_filename
-        );
-
-        let mut file = match File::create(&file_path).await {
+        let mut file = match File::create(file_data.file_path.clone()).await {
             Ok(file) => file,
             Err(err) => {
                 tracing::warn!(
@@ -174,10 +162,10 @@ async fn upload_with_aes_ecnrypt(
         file.flush().await.unwrap();
         drop(file);
 
-        if let Err(err) = insert_to_mongodb(
-            &file_path,
-            &new_filename,
-            &file_name,
+        if let Err(err) = insert_main_data(
+            file_data.file_path.clone(),
+            file_data.new_name,
+            file_data.main_data.name,
             generated_short_path.clone(),
             false,
         )
