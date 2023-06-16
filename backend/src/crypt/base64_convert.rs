@@ -27,8 +27,6 @@ pub async fn convert_aes_to_base64(aes_bytes: [u8; 32]) -> String {
     general_purpose::URL_SAFE_NO_PAD.encode(aes_bytes)
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use crate::crypt::aes_key::set_aes_key;

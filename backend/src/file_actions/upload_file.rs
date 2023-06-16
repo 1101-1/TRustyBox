@@ -1,6 +1,6 @@
 use crate::crypt::base64_convert::convert_aes_to_base64;
 use crate::crypt::{aes_key::set_aes_key, encryption::encrypt_data};
-use crate::db::insert_info::insert_to_mongodb;
+use crate::db::insert_to_db::insert_main_data;
 use crate::tools::generate_uuid::generate_uuid_v4;
 use crate::tools::short_url::generate_short_path_url;
 
@@ -75,7 +75,7 @@ async fn upload_without_ecrypt(
 
         drop(file);
 
-        if let Err(err) = insert_to_mongodb(
+        if let Err(err) = insert_main_data(
             &file_path,
             &new_filename,
             &file_name,
@@ -174,7 +174,7 @@ async fn upload_with_aes_ecnrypt(
         file.flush().await.unwrap();
         drop(file);
 
-        if let Err(err) = insert_to_mongodb(
+        if let Err(err) = insert_main_data(
             &file_path,
             &new_filename,
             &file_name,
