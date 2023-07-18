@@ -55,7 +55,7 @@ impl FileFullData {
     pub async fn set_path(new_name: String) -> String {
         let file_path = format!(
             "{}{}",
-            env::var("PATH_TO_FILES").expect("Unexpected error"),
+            env::var("PATH_TO_FILES").expect("Path to files not present"),
             new_name
         );
 
@@ -64,8 +64,8 @@ impl FileFullData {
 
     pub async fn set_new_name(main_data: FileMainData) -> String {
         let new_filename = match main_data.name.split('.').last() {
-            Some(extension) => format!("{}.{}", generate_uuid_v4().await, extension),
-            None => generate_uuid_v4().await,
+            Some(extension) => format!("{}.{}", generate_uuid_v4(), extension),
+            None => generate_uuid_v4(),
         };
 
         new_filename

@@ -49,7 +49,7 @@ pub async fn download_file(Path(short_url): Path<String>) -> Result<impl IntoRes
             let body = axum::body::Body::from(buf);
             let mut response = Response::new(body);
 
-            let content_type = check_content_type(&file_name).await;
+            let content_type = check_content_type(&file_name);
             let content_disposition = format!("attachment; filename=\"{}\"", file_name);
 
             response
@@ -121,7 +121,7 @@ pub async fn download_file_with_aes(
             let body = axum::body::Body::from(data);
             let mut response = Response::new(body);
 
-            let content_type = check_content_type(&file_name).await;
+            let content_type = check_content_type(&file_name);
             let content_disposition = format!("attachment; filename=\"{}\"", file_name);
 
             response

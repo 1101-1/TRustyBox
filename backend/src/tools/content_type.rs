@@ -1,4 +1,4 @@
-pub async fn check_content_type(filename: &String) -> &'static str {
+pub fn check_content_type(filename: &String) -> &'static str {
     match filename.split('.').last() {
         Some("html") => "text/html",
         Some("css") => "text/css",

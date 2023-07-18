@@ -39,7 +39,7 @@ async fn upload_without_ecrypt(
     mut multipart: tokio::sync::MutexGuard<'_, Multipart>,
 ) -> (axum::http::StatusCode, Json<UploadResponse>) {
     while let Some(mut field) = multipart.next_field().await.unwrap() {
-        let generated_short_path = generate_short_path_url().await;
+        let generated_short_path = generate_short_path_url();
 
         let file_data = FileFullData::new(
             field.file_name().unwrap().to_owned(),
@@ -118,7 +118,7 @@ async fn upload_with_aes_ecnrypt(
         )
         .await;
 
-        let generated_short_path = generate_short_path_url().await;
+        let generated_short_path = generate_short_path_url();
 
         let mut file = match File::create(file_data.file_path.clone()).await {
             Ok(file) => file,

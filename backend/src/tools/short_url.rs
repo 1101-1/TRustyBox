@@ -7,7 +7,7 @@ const CHARS: [char; 52] = [
 ];
 const NUMBERS: [char; 10] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
 
-pub async fn generate_short_path_url() -> String {
+pub fn generate_short_path_url() -> String {
     let mut short_url: Vec<char> = Vec::with_capacity(8);
 
     for _ in 0..8 {
@@ -26,6 +26,6 @@ mod tests {
     use crate::tools::short_url;
     #[tokio::test]
     async fn len_matches() {
-        assert_eq!(short_url::generate_short_path_url().await.len(), 8)
+        assert_eq!(short_url::generate_short_path_url().len(), 8)
     }
 }
