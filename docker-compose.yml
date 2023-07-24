@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  frontend-builder:
+    image: node:16
+    container_name: frontend-builder
+    working_dir: /trustybox/frontend
+    volumes:
+      - ./frontend:/trustybox/frontend
+    command: sh -c "npm install && npm run build"
+    expose:
+      - 5173
+    depends_on:
+      - mongodb
+    networks:
+      - trustybox-net
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    expose:
+      - 27017
+    networks:
+      - trustybox-net
+
+  backend:
+    image: rust:1.67-slim
+    container_name: backend
+    working_dir: /trustybox
+    volumes:
+      - ./backend:/trustybox/backend
+      - ./.env:/trustybox/.env
+      - ./files:/trustybox/files
+    command: ./target/release/backend
+    depends_on:
+      - frontend-builder
+      - mongodb
+    expose:
+      - 8080
+    networks:
+      - trustybox-net
+
+networks:
+  trustybox-net:
+    driver: bridge
