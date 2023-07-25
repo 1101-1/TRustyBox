@@ -7,7 +7,7 @@ use axum::{
 };
 
 pub async fn favicon() -> Result<impl IntoResponse, Infallible> {
-    let favicon_path = "frontend/favicon.ico";
+    let favicon_path = "app/backend/favicon.ico";
     let img = tokio::fs::read(&favicon_path)
         .await
         .expect("Cannot upload img");
