@@ -5,6 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+name = "trustybox_tests"
+path = "src/main.rs"
+
+[[bin]]
+name = "trustybox"
+path = "src/main.rs"
+
 [dependencies]
 axum = { version = "0.6.12", features = ["multipart"] }
 serde = { version = "1.0", features = ["derive"] }

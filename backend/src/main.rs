@@ -14,15 +14,15 @@ use crate::{
 };
 use crate::{file_actions::upload_file, tools::http_tools::get_favicon::favicon};
 
-mod crypt;
-mod db;
-mod file_actions;
-mod tools;
+pub mod crypt;
+pub mod db;
+pub mod file_actions;
+pub mod tools;
 
 const MAX_FILE_SIZE: usize = 15 * 1024 * 1024;
 
 #[tokio::main]
-async fn main() {
+pub async fn main() {
     dotenv().ok();
 
     tracing_subscriber::fmt::init();
